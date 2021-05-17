@@ -20,17 +20,23 @@ finalConfig.HOST_IP = process.env.HOST_IP || finalConfig.HOST_IP;
 if (!isIPv4(finalConfig.HOST_IP)) {
     throw log.fatal("HOST_IP environment variable is not a valid IPv4 address!");
 }
-finalConfig.MASTER_HOST = process.env.MASTER_HOST || finalConfig.MASTER_HOST || finalConfig.HOST_IP;
+
+if (finalConfig.SLAVE) {
+    if (!process.env.MASTER_HOST) {
+        throw log.fatal("Bouter started as non-master but MASTER_HOST variable wasn't set!");
+    }
+}
+
+if(finalConfig.SLAVE) {
+    finalConfig.MASTER_HOST = process.env.MASTER_HOST || finalConfig.MASTER_HOST || finalConfig.HOST_IP;
+} else {
+    finalConfig.MASTER_HOST = finalConfig.MASTER_HOST || finalConfig.HOST_IP;
+}
 
 finalConfig.REDIS_HOST = process.env.REDIS_HOST || finalConfig.HOST_IP ;
 finalConfig.REDIS_PORT = process.env.REDIS_PORT || "6379";
 
-if (finalConfig.SLAVE) {
-    if (!process.env.REDIS_HOST && !process.env.MASTER_HOST) {
-        throw log.fatal("Bouter started as non-master but REDIS_HOST or MASTER_HOST variable wasn't set!");
-    }
-}
-
+finalConfig.CONDUCKTOR_URL = "http://" + finalConfig.MASTER_HOST + ":8044";
 finalConfig.LOG_LEVEL = process.env.LOG_LEVEL || finalConfig.LOG_LEVEL;
 
 log.info("Timezone", Intl.DateTimeFormat().resolvedOptions().timeZone);

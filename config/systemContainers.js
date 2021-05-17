@@ -5,7 +5,7 @@ const REDIS_PORT = "REDIS_PORT=" + global.gConfig.REDIS_PORT;
 
 let conducktorOpts = {
     Hostname: "conducktor",
-    Image: "nginx",
+    Image: "seljuke/conducktor",
     name: "conducktor",
     Labels: {
         "shef-conducktor": "true"
@@ -17,7 +17,7 @@ let conducktorOpts = {
     ],
     HostConfig: {
         "PortBindings": {
-            "80/tcp": [
+            "8044/tcp": [
                 {
                     "HostPort": "8044"   //Map container to a random unused port.
                 }
@@ -30,7 +30,7 @@ let conducktorOpts = {
 };
 let shefRunnerOpts = {
     Hostname: "shefRunner",
-    Image: "docker",
+    Image: "seljuke/shefrunner",
     name: "shefRunner",
     Labels: {
         "shef-shefRunner": "true"
@@ -41,6 +41,13 @@ let shefRunnerOpts = {
     ],
     HostConfig: {
         "Binds": ["/var/run/docker.sock:/var/run/docker.sock"],
+        "PortBindings": {
+            "11044/tcp": [
+                {
+                    "HostPort": "11044"   //Map container to a random unused port.
+                }
+            ]
+        },
         "RestartPolicy": {
             "Name": "unless-stopped"
         }
@@ -48,7 +55,31 @@ let shefRunnerOpts = {
     Cmd: [ "sleep", "3600" ]
 };
 
+let redisOpts = {
+    Hostname: "shefRedis",
+    Image: "redis:6.2",
+    name: "shefRedis",
+    Labels: {
+        "shef-Redis": "true"
+    },
+    HostConfig: {
+        "Binds": ["shefRedis-data:/data"],
+        "PortBindings": {
+            "6379/tcp": [
+                {
+                    "HostPort": "6379"   //Map container to a random unused port.
+                }
+            ]
+        },
+        "RestartPolicy": {
+            "Name": "unless-stopped"
+        }
+    },
+    Cmd: ["redis-server", "--appendonly", "yes"]
+};
+
 module.exports = {
     conducktorOpts,
     shefRunnerOpts,
+    redisOpts,
 };

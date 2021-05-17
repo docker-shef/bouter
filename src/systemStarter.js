@@ -1,20 +1,20 @@
 const { log } = require("../config/config.js");
+const { isEmpty } = require("lodash");
+const streamToPromise = require("stream-to-promise");
 
 const checkExist = async (dockerCon, opts) => {
-    return await dockerCon.listContainers({ "all": true }).then((containers) => {
+    let listOpts = {"all": true,"filters": ""};
+    listOpts["filters"] = {"label": Object.keys(opts.Labels)};
+    return await dockerCon.listContainers(listOpts).then((containers) => {
         var status = false;
-        containers.every((containerInfo) => {
-            if (Object.keys(containerInfo.Labels).includes(Object.keys(opts.Labels)[0])) {
-                log.debug(opts.name + " already exist.");
-                status = true;
-                if (containerInfo.State != "running") {
-                    log.debug("Starting stopped " + opts.name);
-                    dockerCon.getContainer(containerInfo.Id).start();
-                }
-                return false; //break for every() func
+        if (!isEmpty(containers)) {
+            log.debug(opts.name + " already exist.");
+            status = true;
+            if (containers[0].State != "running") {
+                log.debug("Starting stopped " + opts.name);
+                dockerCon.getContainer(containers[0].Id).start();
             }
-            return true; //continue for every() func
-        })
+        }
         return status;
     });
 }
@@ -22,6 +22,10 @@ const bootSystemContainer = async (dockerCon, opts) => {
     if (await checkExist(dockerCon, opts)) {
         return true;
     } else {
+        await streamToPromise(await this.dockerCon.pull(opts.Image).catch((err) => {
+            log.fatal(err);
+            throw "Couldn't pull Image!";
+        }));
         return await dockerCon.createContainer(opts)
             .then(function (container) {
                 log.debug(`Creating ${opts.name} container!`);
@@ -33,4 +37,4 @@ const bootSystemContainer = async (dockerCon, opts) => {
     }
 }
 
-module.exports = {bootSystemContainer};
+module.exports = { bootSystemContainer };
