@@ -7,7 +7,7 @@ FROM base as production
 ENV NODE_ENV=production
 RUN npm install -g nodemon && npm install -g bunyan && npm ci
 COPY . .
-CMD ["node", "server.js"]
+CMD ["npm", "run", "prod"]
 
 FROM base as dev
 ENV NODE_ENV=development

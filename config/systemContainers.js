@@ -5,7 +5,7 @@ const REDIS_PORT = "REDIS_PORT=" + global.gConfig.REDIS_PORT;
 
 let conducktorOpts = {
     Hostname: "conducktor",
-    Image: "seljuke/conducktor",
+    Image: "seljuke/conducktor:latest",
     name: "conducktor",
     Labels: {
         "shef-conducktor": "true"
@@ -15,6 +15,7 @@ let conducktorOpts = {
         REDIS_PORT,
         HOST_IP
     ],
+    ExposedPorts: {'8044/tcp':{}},
     HostConfig: {
         "PortBindings": {
             "8044/tcp": [
@@ -30,7 +31,7 @@ let conducktorOpts = {
 };
 let shefRunnerOpts = {
     Hostname: "shefRunner",
-    Image: "seljuke/shefrunner",
+    Image: "seljuke/shefrunner:latest",
     name: "shefRunner",
     Labels: {
         "shef-shefRunner": "true"
@@ -39,6 +40,7 @@ let shefRunnerOpts = {
         HOST_IP,
         MASTER_HOST
     ],
+    ExposedPorts: {'11044/tcp':{}},
     HostConfig: {
         "Binds": ["/var/run/docker.sock:/var/run/docker.sock"],
         "PortBindings": {
@@ -51,8 +53,7 @@ let shefRunnerOpts = {
         "RestartPolicy": {
             "Name": "unless-stopped"
         }
-    },
-    Cmd: [ "sleep", "3600" ]
+    }
 };
 
 let redisOpts = {

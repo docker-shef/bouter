@@ -7,6 +7,7 @@ const Docker = require("dockerode");
 const DockerUtils = require("./src/dockerUtils");
 const { bootSystemContainer } = require("./src/systemStarter");
 const systemContainers = require("./config/systemContainers");
+const _ = require("lodash");
 
 const dockerCon = new Docker({ socketPath: "/var/run/docker.sock" });
 
@@ -31,7 +32,9 @@ async function initBouter() {
         log.info("First boot checks!");
         if (!global.gConfig.SLAVE) {
             log.info("Node is not a slave. Checking Redis and System containers.");
-            await bootSystemContainer(dockerCon, systemContainers.redisOpts);
+            if (_.isEmpty(process.env.REDIS_HOST)) {
+                await bootSystemContainer(dockerCon, systemContainers.redisOpts);
+            }
             await bootSystemContainer(dockerCon, systemContainers.conducktorOpts);
         }
         await bootSystemContainer(dockerCon, systemContainers.shefRunnerOpts);
@@ -52,7 +55,9 @@ async function initBouter() {
                 log.info("Scheduled container checks!");
                 var status = true;
                 if (!global.gConfig.SLAVE) {
-                    if (!await bootSystemContainer(dockerCon, systemContainers.redisOpts)) status = false;
+                    if (_.isEmpty(process.env.REDIS_HOST)) {
+                        if (!await bootSystemContainer(dockerCon, systemContainers.redisOpts)) status = false;
+                    }
                     if (!await bootSystemContainer(dockerCon, systemContainers.conducktorOpts)) status = false;
                 }
                 if (!await bootSystemContainer(dockerCon, systemContainers.shefRunnerOpts)) status = false;
